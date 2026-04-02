@@ -1,38 +1,25 @@
-import sqlite3
-import json
+import psycopg2
+from dotenv import load_dotenv
 import os
 
-db_path = os.path.join(os.path.dirname(__file__), "claracare.db")
+load_dotenv()
 
-def get_db():
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+def get_connection():
+    conn = psycopg2.connect(
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT")
+    )
     return conn
 
-def init_db():
-    conn = get_db()
-    cursor = conn.cursor()
+def test_connection():
+    try:
+        conn = get_connection()
+        print("Connected to ClaraCare database successfully!")
+        conn.close()
+    except Exception as e:
+        print(f"Connection failed: {e}")
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS clinics (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            address TEXT NOT NULL,
-            city TEXT NOT NULL,
-            state TEXT DEFAULT 'NJ',
-            zip_code TEXT NOT NULL,
-            lat REAL NOT NULL,
-            lng REAL NOT NULL,
-            phone TEXT,
-            website TEXT,
-            services TEXT,
-            languages TEXT,
-            hours TEXT,
-            appointment_required INTEGER DEFAULT 0,
-            sliding_scale INTEGER DEFAULT 0,
-            notes TEXT
-        )
-    """)
-
-    conn.commit()
-    conn.close()
+test_connection()
